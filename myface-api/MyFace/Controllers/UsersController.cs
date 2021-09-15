@@ -1,7 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Internal;
+using MyFace.Helpers;
 using MyFace.Models.Request;
 using MyFace.Models.Response;
 using MyFace.Repositories;
+using System;
 
 namespace MyFace.Controllers
 {
@@ -15,7 +19,7 @@ namespace MyFace.Controllers
         {
             _users = users;
         }
-        
+
         [HttpGet("")]
         public ActionResult<UserListResponse> Search([FromQuery] UserSearchRequest searchRequest)
         {
@@ -27,8 +31,15 @@ namespace MyFace.Controllers
         [HttpGet("{id}")]
         public ActionResult<UserResponse> GetById([FromRoute] int id)
         {
+            var authHeader = HttpContext.Request.Headers["Authorization"];
+            if (!_users.CheckIfUserHasAccess(authHeader))
+            {
+                return new NotFoundResult();
+            }
+
             var user = _users.GetById(id);
             return new UserResponse(user);
+
         }
 
         [HttpPost("create")]
@@ -38,7 +49,7 @@ namespace MyFace.Controllers
             {
                 return BadRequest(ModelState);
             }
-            
+
             var user = _users.Create(newUser);
 
             var url = Url.Action("GetById", new { id = user.Id });
@@ -57,7 +68,7 @@ namespace MyFace.Controllers
             var user = _users.Update(id, update);
             return new UserResponse(user);
         }
-        
+
         [HttpDelete("{id}")]
         public IActionResult Delete([FromRoute] int id)
         {

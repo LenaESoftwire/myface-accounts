@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using MyFace.Helpers;
 using MyFace.Models.Database;
 using MyFace.Models.Request;
 
@@ -14,6 +15,8 @@ namespace MyFace.Repositories
         User Create(CreateUserRequest newUser);
         User Update(int id, UpdateUserRequest update);
         void Delete(int id);
+        User GetByUsername(string username);
+        bool CheckIfUserHasAccess(string authHeader);
     }
     
     public class UsersRepo : IUsersRepo
@@ -60,6 +63,7 @@ namespace MyFace.Repositories
 
         public User Create(CreateUserRequest newUser)
         {
+            var salt = AuthHelper.GetSalt();
             var insertResponse = _context.Users.Add(new User
             {
                 FirstName = newUser.FirstName,
@@ -68,6 +72,8 @@ namespace MyFace.Repositories
                 Username = newUser.Username,
                 ProfileImageUrl = newUser.ProfileImageUrl,
                 CoverImageUrl = newUser.CoverImageUrl,
+                HashedPassword = AuthHelper.HashPassword(newUser.Password, salt),
+                Salt = salt
             });
             _context.SaveChanges();
 
@@ -96,6 +102,25 @@ namespace MyFace.Repositories
             var user = GetById(id);
             _context.Users.Remove(user);
             _context.SaveChanges();
+        }
+
+        public User GetByUsername(string username)
+        {
+            return _context.Users
+                .Single(user => user.Username == username);
+        }
+
+        public bool CheckIfUserHasAccess(string authHeader)
+        {
+            var usernamePassword = AuthHelper.GetUsernamePassword(authHeader);
+            var userOnCheck = GetByUsername(usernamePassword[0]);
+            if (userOnCheck == null || userOnCheck.HashedPassword == usernamePassword[1])
+            {
+                return false;
+            }
+            return true;
+            
+
         }
     }
 }
