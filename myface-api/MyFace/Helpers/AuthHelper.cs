@@ -32,6 +32,7 @@ namespace MyFace.Helpers
 
         public static string[] GetUsernamePassword(string authHeader)
         {
+            Console.WriteLine($"auth: {authHeader}");
             if (authHeader != null && authHeader.StartsWith("Basic"))
             {
                 string encodedUsernamePassword = authHeader.Substring("Basic ".Length).Trim();

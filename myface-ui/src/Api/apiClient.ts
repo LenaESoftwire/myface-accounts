@@ -40,13 +40,23 @@ export interface NewPost {
     userId: number;
 }
 
-export async function fetchUsers(searchTerm: string, page: number, pageSize: number): Promise<ListResponse<User>> {
-    const response = await fetch(`https://localhost:5001/users?search=${searchTerm}&page=${page}&pageSize=${pageSize}`);
+export async function fetchUsers(searchTerm: string, page: number, pageSize: number, authHeader: string): Promise<ListResponse<User>> {
+    const response = await fetch(`https://localhost:5001/users?search=${searchTerm}&page=${page}&pageSize=${pageSize}`, {
+        headers: {
+            'Authorization': `Basic ${authHeader}`
+        }
+    });
+
     return await response.json();
 }
 
-export async function fetchUser(userId: string | number): Promise<User> {
-    const response = await fetch(`https://localhost:5001/users/${userId}`);
+export async function fetchUser(userId: string | number, authHeader: string): Promise<User> {
+    const response = await fetch(`https://localhost:5001/users/${userId}`, {
+        headers: {
+            'Authorization': `Basic ${authHeader}`
+        }
+    }
+    );
     return await response.json();
 }
 
@@ -78,7 +88,7 @@ export async function createPost(newPost: NewPost) {
         },
         body: JSON.stringify(newPost),
     });
-    
+
     if (!response.ok) {
         throw new Error(await response.json())
     }

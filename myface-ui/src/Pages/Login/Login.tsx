@@ -11,7 +11,8 @@ export function Login(): JSX.Element {
     
     function tryLogin(event: FormEvent) {
         event.preventDefault();
-        loginContext.logIn();
+        const authHeader = btoa(`${username}:${password}`);
+        loginContext.logIn(authHeader);
     }
     
     return (
