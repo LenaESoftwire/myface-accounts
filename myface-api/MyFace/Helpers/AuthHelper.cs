@@ -39,8 +39,6 @@ namespace MyFace.Helpers
                 var usernamePassword = encoding.GetString(Convert.FromBase64String(encodedUsernamePassword));
 
                 return usernamePassword.Split(":");
-
-                //Extract credentials
             }
             else
             {

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using MyFace.Helpers;
@@ -18,7 +19,7 @@ namespace MyFace.Repositories
         User GetByUsername(string username);
         bool CheckIfUserHasAccess(string authHeader);
     }
-    
+
     public class UsersRepo : IUsersRepo
     {
         private readonly MyFaceDbContext _context;
@@ -27,11 +28,11 @@ namespace MyFace.Repositories
         {
             _context = context;
         }
-        
+
         public IEnumerable<User> Search(UserSearchRequest search)
         {
             return _context.Users
-                .Where(p => search.Search == null || 
+                .Where(p => search.Search == null ||
                             (
                                 p.FirstName.ToLower().Contains(search.Search) ||
                                 p.LastName.ToLower().Contains(search.Search) ||
@@ -46,7 +47,7 @@ namespace MyFace.Repositories
         public int Count(UserSearchRequest search)
         {
             return _context.Users
-                .Count(p => search.Search == null || 
+                .Count(p => search.Search == null ||
                             (
                                 p.FirstName.ToLower().Contains(search.Search) ||
                                 p.LastName.ToLower().Contains(search.Search) ||
@@ -57,8 +58,15 @@ namespace MyFace.Repositories
 
         public User GetById(int id)
         {
-            return _context.Users
+            try
+            {
+                return _context.Users
                 .Single(user => user.Id == id);
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public User Create(CreateUserRequest newUser)
@@ -106,20 +114,29 @@ namespace MyFace.Repositories
 
         public User GetByUsername(string username)
         {
-            return _context.Users
-                .Single(user => user.Username == username);
+            try
+            {
+                return _context.Users
+                    .Single(user => user.Username == username);
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public bool CheckIfUserHasAccess(string authHeader)
         {
             var usernamePassword = AuthHelper.GetUsernamePassword(authHeader);
             var userOnCheck = GetByUsername(usernamePassword[0]);
-            if (userOnCheck == null || userOnCheck.HashedPassword == usernamePassword[1])
+            var checkedPassword = AuthHelper.HashPassword(usernamePassword[01], userOnCheck.Salt);
+
+            if (userOnCheck == null || userOnCheck.HashedPassword != checkedPassword)
             {
                 return false;
             }
             return true;
-            
+
 
         }
     }

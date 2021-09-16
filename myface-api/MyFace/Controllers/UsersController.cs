@@ -34,11 +34,16 @@ namespace MyFace.Controllers
             var authHeader = HttpContext.Request.Headers["Authorization"];
             if (!_users.CheckIfUserHasAccess(authHeader))
             {
-                return new NotFoundResult();
+                return new UnauthorizedResult();
             }
 
             var user = _users.GetById(id);
-            return new UserResponse(user);
+            if (user != null)
+            {
+                return new UserResponse(user);
+            }
+
+            return new NotFoundResult();
 
         }
 
